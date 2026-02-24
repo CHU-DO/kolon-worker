@@ -6,36 +6,86 @@
 		<title>Hello, World!</title>
 	</head>
 	<body>
-		<h1 id="heading"></h1>
-		<p>This page comes from a static asset stored at `public/index.html` as configured in `wrangler.jsonc`.</p>
-		<button id="button" type="button">Fetch a random UUID</button>
-		<output id="random" for="button"></output>
+		<div id="item-area"></div>
 		<script>
-			const r2BucketNm = 'https://pub-ee4d21cc8d0a487da2147fc062da4bf1.r2.dev/';
-			const data = fetch(`${r2BucketNm}content_map.json`).then((res) => res.json());
-
-			const h1 = document.getElementById('heading');
-
-			console.log(data);
-
-			h1.textContent = data;
-
-			// fetch('/message')
-			// 	.then((resp) => resp.text())
-			// 	.then((text) => {
-			// 		const h1 = document.getElementById('heading');
-			// 		h1.textContent = text;
-			// 	});
-
-			const button = document.getElementById('button');
-			button.addEventListener('click', () => {
-				fetch('/random')
-					.then((resp) => resp.text())
-					.then((text) => {
-						const random = document.getElementById('random');
-						random.textContent = text;
-					});
+			document.addEventListener('DOMContentLoaded', function () {
+				pageInit();
 			});
+
+			const pageInit = async () => {
+				await getData();
+			};
+
+			async function getData() {
+				const r2BucketNm = 'https://pub-ee4d21cc8d0a487da2147fc062da4bf1.r2.dev/';
+
+				try {
+					const res = await fetch(`${r2BucketNm}content_map.json`);
+					const data = await res.json();
+					const itemArea = document.getElementById('item-area');
+
+					for (const key in data) {
+						if (data.hasOwnProperty(key)) {
+							const item = data[key];
+
+							// 새로운 div 생성
+							const div = document.createElement('div');
+							div.classList.add('item'); // 스타일을 위한 클래스 추가
+							div.textContent = item.title; // 제목 추가
+
+							// 클릭 이벤트 추가
+							div.addEventListener('click', () => {
+								window.open(`${r2BucketNm}${item.src}`, '_blank'); // PDF 파일 열기
+							});
+
+							// item-area에 div 추가
+							itemArea.appendChild(div);
+						}
+					}
+				} catch (error) {
+					console.error('Error fetching data:', error);
+				}
+			}
 		</script>
+		<style>
+			/* 전체 아이템 영역 스타일 */
+			#item-area {
+				display: grid;
+				grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* 카드형 레이아웃 */
+				gap: 20px; /* 아이템들 사이 간격 */
+				padding: 20px;
+				max-width: 1200px;
+				margin: 0 auto; /* 가운데 정렬 */
+				background-color: #f9f9f9; /* 배경색 */
+				border-radius: 10px; /* 모서리 둥글게 */
+			}
+
+			/* 각 아이템 스타일 */
+			.item {
+				background-color: #fff; /* 배경색 */
+				padding: 20px;
+				border-radius: 10px; /* 모서리 둥글게 */
+				box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* 그림자 효과 */
+				text-align: center;
+				font-size: 18px;
+				color: #333; /* 글자 색 */
+				cursor: pointer;
+				transition: transform 0.3s ease, box-shadow 0.3s ease; /* 클릭 효과 */
+			}
+
+			/* 아이템에 마우스 올릴 때 효과 */
+			.item:hover {
+				transform: translateY(-5px); /* 살짝 위로 이동 */
+				box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* 더 강한 그림자 */
+				background-color: #f0f0f0; /* 배경색 변화 */
+			}
+
+			/* 작은 화면에서 아이템 크기 조정 (반응형) */
+			@media (max-width: 768px) {
+				#item-area {
+					grid-template-columns: 1fr; /* 한 줄로 표시 */
+				}
+			}
+		</style>
 	</body>
 </html>
